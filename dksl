@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>진짜? 가짜? 뉴스 판별 게임</title>
+
+<style>
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:"Pretendard","Apple SD Gothic Neo",sans-serif;
+}
+
+body{
+    background:linear-gradient(135deg,#7ec8ff,#d6f0ff);
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    height:100vh;
+}
+
+.game{
+    width:430px;
+    max-width:95%;
+}
+
+.card{
+    background:white;
+    border-radius:22px;
+    overflow:hidden;
+    box-shadow:0 15px 35px rgba(0,0,0,.18);
+    transition:.35s;
+}
+
+.card.correct{
+    background:#d8ffd8;
+    transform:scale(1.02);
+}
+
+.card.wrong{
+    background:#ffd7d7;
+    transform:scale(1.02);
+}
+
+img{
+    width:100%;
+    height:240px;
+    object-fit:cover;
+    display:block;
+}
+
+.content{
+    padding:24px;
+}
+
+h2{
+    text-align:center;
+    margin-bottom:18px;
+    font-size:24px;
+}
+
+.progress{
+    text-align:center;
+    color:#666;
+    margin-bottom:18px;
+    font-weight:bold;
+}
+
+.headline{
+    font-size:22px;
+    font-weight:bold;
+    line-height:1.6;
+    text-align:center;
+    margin-bottom:20px;
+}
+
+.buttons{
+    display:flex;
+    gap:15px;
+}
+
+button{
+    flex:1;
+    padding:14px;
+    border:none;
+    border-radius:12px;
+    font-size:18px;
+    font-weight:bold;
+    cursor:pointer;
+    transition:.2s;
+}
+
+button:hover{
+    transform:translateY(-2px);
+}
+
+.real{
+    background:#4caf50;
+    color:white;
+}
+
+.fake{
+    background:#f44336;
+    color:white;
+}
+
+.reason{
+    margin-top:22px;
+    padding:15px;
+    background:#f5f5f5;
+    border-radius:12px;
+    line-height:1.6;
+    display:none;
+}
+
+.next{
+    margin-top:18px;
+    width:100%;
+    background:#2d7ef7;
+    color:white;
+    display:none;
+}
+
+.result{
+    text-align:center;
+    padding:40px 20px;
+}
+
+.result h1{
+    margin-bottom:20px;
+}
+
+.score{
+    font-size:50px;
+    color:#2d7ef7;
+    margin:20px 0;
+}
+</style>
+
+</head>
+<body>
+
+<div class="game">
+
+<div class="card" id="card">
+
+<div id="imageArea"></div>
+
+<div class="content">
+
+<div class="progress" id="progress"></div>
+
+<div class="headline" id="headline"></div>
+
+<div class="buttons">
+<button class="real" onclick="checkAnswer(false)">진짜</button>
+<button class="fake" onclick="checkAnswer(true)">가짜</button>
+</div>
+
+<div class="reason" id="reason"></div>
+
+<button class="next" id="nextBtn" onclick="nextCard()">다음 ▶</button>
+
+</div>
+
+</div>
+
+</div>
+
+<script>
+
+const newsData = [
+{
+headline:"리센느의 love attack은 성공적인 역주행의 결과로 끝내 멜론 TOP 100 1위를 달성했다",
+isFake:false,
+reason:"리센느는 7월 8일 오후 10시 기준 톱100 차트에서 1위를 기록하며 멤버들 모두 함께 눈물의 라이브 방송을 진행했다.",
+image:"리센느일위.png"
+},
+{
+headline:"엔하이픈은 멤버 모두가 헌혈에 참여하는 유튜브 콘텐츠를 제작하여 올렸다",
+isFake:true,
+reason:"썸네일 오른쪽 위의 로고가 BE:LIFT가 아닌 BE:LIF이다. 또한 실제 영상에서는 4명이 사전 검사 결과 헌혈을 할 수 없었다.",
+image:"엔하이픈헌혈.png"
+},
+{
+headline:"고양국제고는 학교가 세워지기 전에 교육감 당선자에 의해 설립이 취소될 뻔 했다",
+isFake:false,
+reason:"김상곤 경기도교육감 당선자가 '국제고 설립을 전면 재검토하겠다'는 입장을 밝히면서 고양지역 주민들이 강하게 반발하였다.",
+image:"고양국제고재검토.png"
+}
+];
+
+let current=0;
+let score=0;
+
+const headline=document.getElementById("headline");
+const imageArea=document.getElementById("imageArea");
+const reason=document.getElementById("reason");
+const card=document.getElementById("card");
+const nextBtn=document.getElementById("nextBtn");
+const progress=document.getElementById("progress");
+
+function loadCard(){
+
+card.className="card";
+reason.style.display="none";
+nextBtn.style.display="none";
+
+document.querySelector(".real").disabled=false;
+document.querySelector(".fake").disabled=false;
+
+const item=newsData[current];
+
+progress.innerHTML=`${current+1} / ${newsData.length}`;
+
+headline.textContent=item.headline;
+
+if(item.image && item.image!=="null"){
+imageArea.innerHTML=`<img src="${item.image}" alt="">`;
+}else{
+imageArea.innerHTML="";
+}
+
+}
+
+function checkAnswer(userChoice){
+
+const item=newsData[current];
+
+document.querySelector(".real").disabled=true;
+document.querySelector(".fake").disabled=true;
+
+const correct=(userChoice===item.isFake);
+
+if(correct){
+score++;
+card.classList.add("correct");
+reason.innerHTML="<b>✅ 정답!</b><br><br>"+item.reason;
+}else{
+card.classList.add("wrong");
+reason.innerHTML="<b>❌ 오답!</b><br><br>"+item.reason;
+}
+
+reason.style.display="block";
+nextBtn.style.display="block";
+
+}
+
+function nextCard(){
+
+current++;
+
+if(current>=newsData.length){
+showResult();
+return;
+}
+
+loadCard();
+
+}
+
+function showResult(){
+
+document.querySelector(".game").innerHTML=`
+<div class="card">
+<div class="result">
+<h1>🎉 게임 종료!</h1>
+<p>총 ${newsData.length}문제 중</p>
+<div class="score">${score} / ${newsData.length}</div>
+<h2>${score===newsData.length ? "만점입니다! 👏" : "수고했습니다!"}</h2>
+<br>
+<button class="next" style="display:block;" onclick="location.reload()">다시 하기</button>
+</div>
+</div>
+`;
+
+}
+
+loadCard();
+
+</script>
+
+</body>
+</html>
